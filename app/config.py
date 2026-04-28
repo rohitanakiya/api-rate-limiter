@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     default_bucket_capacity: int = 100
     default_refill_rate: float = 10.0  # tokens per second
 
+    # Proxy / gateway mode
+    # When upstream_url is set, requests to /gw/{path} are authenticated,
+    # rate-limited, then forwarded to upstream_url + /{path}.
+    # Leave empty to disable proxy mode.
+    upstream_url: str = ""
+    proxy_request_timeout: float = 30.0  # seconds
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

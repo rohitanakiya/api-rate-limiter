@@ -8,6 +8,7 @@ from app.dependencies import verify_request, require_scope
 from app.auth.models import APIKey, KeyScope
 from app.admin.router import router as admin_router
 from app.metrics.router import router as metrics_router
+from app.proxy.router import router as proxy_router
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -29,6 +30,10 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name}")
     await redis_client.connect()
     logger.info(f"Redis connected. Fallback mode: {redis_client.is_fallback}")
+    if settings.upstream_url:
+        logger.info(f"Gateway proxy enabled. Forwarding /gw/* to {settings.upstream_url}")
+    else:
+        logger.info("Gateway proxy disabled (UPSTREAM_URL not set).")
     yield
     await redis_client.disconnect()
     logger.info("Shutdown complete")
@@ -45,6 +50,10 @@ app = FastAPI(
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(admin_router)
 app.include_router(metrics_router)
+# Proxy router is always mounted; it returns 503 if UPSTREAM_URL isn't set.
+# Mounting unconditionally keeps the route table predictable and lets
+# operators flip the flag in .env without restarting code paths.
+app.include_router(proxy_router)
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -56,6 +65,7 @@ async def root():
         "version": "1.0.0",
         "status": "operational",
         "redis_mode": "fallback" if redis_client.is_fallback else "redis",
+        "gateway": "enabled" if settings.upstream_url else "disabled",
     }
 
 
