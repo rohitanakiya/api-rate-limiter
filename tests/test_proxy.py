@@ -99,7 +99,11 @@ class TestProxyDisabled:
     """When UPSTREAM_URL isn't set, /gw/* must return 503."""
 
     def test_returns_503_when_upstream_not_configured(self, client, monkeypatch):
-        monkeypatch.delenv("UPSTREAM_URL", raising=False)
+        # Set to empty string rather than delenv: pydantic-settings also
+        # reads from the .env file, which on a dev machine often has
+        # UPSTREAM_URL configured. Empty string in os.environ takes
+        # precedence over .env and is treated as "not set" by our check.
+        monkeypatch.setenv("UPSTREAM_URL", "")
         get_settings.cache_clear()
         try:
             response = client.get("/gw/anything")

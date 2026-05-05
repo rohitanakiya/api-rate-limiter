@@ -4,6 +4,10 @@ A production-grade API rate limiting and key management system built with
 FastAPI, Redis, and Python. Implements the same patterns used by Stripe,
 GitHub, and AWS to protect their APIs.
 
+> 🔗 **Used in production by:** [ai-food-backend](https://github.com/rohitanakiya/foodhelp) — the AI food recommender ([live demo](https://foodhelp-frontend.vercel.app)) is wired to run behind this gateway in Path B mode. See the **Gateway Mode** section below for the integration details.
+>
+> _The rate-limiter itself runs locally for development; the live food-backend currently calls its own routes directly and would proxy through this service when deployed alongside it._
+
 ## What this project does
 
 Any valuable API needs to answer three questions on every request:
